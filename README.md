@@ -45,7 +45,7 @@ The biggest bottleneck for TTB compliance agents has been batch label review -- 
 
 - **Focused on batch uploads as the core problem.** Sarah and Janet both emphasized that processing labels one-at-a-time is the biggest pain point for agents handling 200-300 label applications from importers. Everything else -- the streaming results, chunked uploads, parallel workers -- supports that goal.
   
-- **Haiku-only for speed.** Sonnet produces more accurate extraction on difficult labels but takes 2-3x longer. Since agents flagged 5-second response time as a hard requirement (the scanning vendor pilot failed at 30-40s), I kept Haiku as the sole model. The Sonnet fallback logic exists in the codebase but is disabled. Trade-off: occasional extraction misses on low-quality images that Sonnet would catch.
+- **Haiku-only for speed.** Sonnet produces more accurate extraction on difficult labels but takes 2-3x longer. Since agents flagged 5-second response time as a hard requirement (the scanning vendor pilot failed at 30-40s), I kept Haiku as the sole model. Trade-off: occasional extraction misses on low-quality images that Sonnet would catch. Claude models are approved for FedRAMP High
   
 - **Case-insensitive, punctuation-normalized matching.** Dave's example of "STONE'S THROW" vs "Stone's Throw" is handled -- brand name comparison strips punctuation and case before comparing, so obvious formatting differences don't trigger false mismatches.
   
