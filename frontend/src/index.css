@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy-900: #1b2a4a;
+  --color-navy-800: #1f3358;
+  --color-navy-700: #284370;
+  --color-navy-600: #345d96;
+  --color-cream-50: #faf8f2;
+  --color-cream-100: #f5f0e6;
+  --color-cream-200: #e8dfd0;
+  --color-gold-500: #ffbe2e;
+  --color-gold-600: #e5a000;
+  --font-family-heading: 'Merriweather', Georgia, serif;
+  --font-family-body: 'Source Sans 3', system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--font-family-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

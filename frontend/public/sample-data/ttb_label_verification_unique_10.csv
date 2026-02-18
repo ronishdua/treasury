@@ -1,0 +1,11 @@
+label_id,brand_name,class_type,alcohol_content,net_contents,producer_name,producer_address
+COLA-0001,Old Tom Distillery,Kentucky Straight Bourbon Whiskey,45% Alc./Vol.,750 mL,Old Tom Distillery,"Louisville, KY"
+COLA-0002,Stone's Throw,Kentucky Straight Bourbon Whiskey,40% Alc./Vol.,750 mL,Stone's Throw Distillery,"Frankfort, KY"
+COLA-0003,Night Harbor,London Dry Gin,47% Alc./Vol.,700 mL,Night Harbor Distilling Co.,"London, England"
+COLA-0004,Montagna Rosso,Chianti Classico Wine,13.5% Alc./Vol.,750 mL,Montagna Estates,"Tuscany, Italy"
+COLA-0005,Golden Prairie,American Lager Beer,5.2% Alc./Vol.,12 FL OZ,Golden Prairie Brewing,"Milwaukee, WI"
+COLA-0006,Blue Coast Spirits,Small Batch Vodka,40% Alc./Vol.,750 mL,Blue Coast Spirits Co.,"Santa Barbara, CA"
+COLA-0007,Iron Oak Reserve,Tennessee Whiskey,45% Alc./Vol.,750 mL,Iron Oak Distilling,"Nashville, TN"
+COLA-0008,Desert Bloom,Agave Tequila,38% Alc./Vol.,750 mL,Desert Bloom Spirits,"Jalisco, Mexico"
+COLA-0009,Maple Ridge,Canadian Rye Whisky,42% Alc./Vol.,750 mL,Maple Ridge Distillers,"Ontario, Canada"
+COLA-0010,Silver Wave,Premium White Rum,40% Alc./Vol.,1 L,Silver Wave Rum Co.,"San Juan, Puerto Rico"
