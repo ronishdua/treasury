@@ -1,5 +1,7 @@
 # TTB Label Compliance Checker
 
+**Live:** [treasury-five-xi.vercel.app](https://treasury-five-xi.vercel.app/)
+
 AI-powered alcohol beverage label verification for TTB compliance agents. Upload label images and application data, and get automated compliance checks with real-time streaming results.
 
 ## How It Works
@@ -37,7 +39,7 @@ Image filenames should match the `label_id` column in your CSV. For example, a r
 
 ## Approach
 
-The biggest bottleneck for TTB compliance agents has been batch label review -- Janet mentioned that agents have been asking for bulk upload capability for years. That was the priority: enabling agents to upload and verify up to 300 labels at once, with results streaming back as each label finishes rather than waiting for the entire batch. The frontend chunks uploads (10 files at a time, 4 concurrent) to keep things stable, and a global worker pool on the backend processes labels in parallel.
+The biggest bottleneck for TTB compliance agents has been batch label review -- Janet mentioned that agents have been asking for bulk upload capability for years. That was the priority: enabling agents to upload and verify up to 300 labels at once, with results streaming back as each label finishes rather than waiting for the entire batch. The frontend compresses images client-side and chunks uploads (3 files at a time, 4 concurrent) to keep things fast, and a global worker pool on the backend processes labels in parallel.
 
 ## Quick Start
 
