@@ -236,7 +236,11 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Label Compliance Checker", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://treasury-five-xi.vercel.app",
+        "https://backend-bitter-fog-6071.fly.dev",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
