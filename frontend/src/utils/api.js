@@ -58,7 +58,7 @@ export function streamUrl(jobId) {
 const CHUNK_SIZE = 3;
 const MAX_CONCURRENT = 4;
 
-export async function uploadAllChunked(jobId, files, onChunkDone) {
+export async function uploadAllChunked(jobId, files) {
   const chunks = [];
   for (let i = 0; i < files.length; i += CHUNK_SIZE) {
     const chunk = [];
@@ -75,10 +75,7 @@ export async function uploadAllChunked(jobId, files, onChunkDone) {
     while (active.length < MAX_CONCURRENT && chunkIndex < chunks.length) {
       const idx = chunkIndex++;
       const promise = uploadChunk(jobId, chunks[idx])
-        .then((ack) => {
-          if (onChunkDone) onChunkDone(ack);
-          return { status: 'ok', idx };
-        })
+        .then(() => ({ status: 'ok', idx }))
         .catch((err) => ({ status: 'error', idx, error: err }));
       promise._idx = idx;
       active.push(promise);

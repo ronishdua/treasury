@@ -1,9 +1,14 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import Papa from "papaparse";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_FILES = 300;
 const REQUIRED_CSV_COLUMN = "label_id";
+const SAMPLE_CSV_URL = '/sample-data/ttb_label_verification_unique_10.csv';
+const SAMPLE_IMAGE_NAMES = [
+  'COLA-0001.png', 'COLA-0002.png', 'COLA-0003.png', 'COLA-0004.png', 'COLA-0005.png',
+  'COLA-0006.png', 'COLA-0007.png', 'COLA-0008.png', 'COLA-0009.png', 'COLA-0010.png',
+];
 const RECOGNIZED_CSV_COLUMNS = [
   "label_id",
   "brand_name",
@@ -37,6 +42,7 @@ function PreviewLightbox({ src, alt, onClose }) {
 
 function FilePreview({ file, onRemove }) {
   const url = useMemo(() => URL.createObjectURL(file), [file]);
+  useEffect(() => () => URL.revokeObjectURL(url), [url]);
   const [lightbox, setLightbox] = useState(false);
   return (
     <div className='group'>
@@ -240,20 +246,6 @@ export default function UploadZone({ onAnalyze, disabled }) {
       onAnalyze(files, csvRows);
     }
   }, [files, csvRows, onAnalyze]);
-
-  const handleClear = useCallback(() => {
-    setFiles([]);
-    setCsvRows(null);
-    setCsvError(null);
-    if (imageInputRef.current) imageInputRef.current.value = "";
-    if (csvInputRef.current) csvInputRef.current.value = "";
-  }, []);
-
-  const SAMPLE_CSV_URL = '/sample-data/ttb_label_verification_unique_10.csv';
-  const SAMPLE_IMAGE_NAMES = [
-    'COLA-0001.png', 'COLA-0002.png', 'COLA-0003.png', 'COLA-0004.png', 'COLA-0005.png',
-    'COLA-0006.png', 'COLA-0007.png', 'COLA-0008.png', 'COLA-0009.png', 'COLA-0010.png',
-  ];
 
   const [loadingSampleCsv, setLoadingSampleCsv] = useState(false);
   const [loadingSampleImages, setLoadingSampleImages] = useState(false);

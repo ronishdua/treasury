@@ -234,7 +234,7 @@ def _compare_government_warning(extracted_data: dict) -> dict:
         return _result("government_warning", CANONICAL_WARNING, extracted_text, "match")
 
     # Check word-level similarity for partial match
-    canon_words = set(_strip_all_punct(CANONICAL_WARNING).split() if False else re.findall(r"[a-z0-9]+", CANONICAL_WARNING.lower()))
+    canon_words = set(re.findall(r"[a-z0-9]+", CANONICAL_WARNING.lower()))
     ext_words = set(re.findall(r"[a-z0-9]+", extracted_text.lower()))
     overlap = len(canon_words & ext_words)
     total = max(len(canon_words), 1)
@@ -255,10 +255,6 @@ def _compare_producer_address(expected: str, extracted: str | None) -> dict:
     if not extracted:
         return _result("producer_address", expected, extracted, "not_found",
                         "Producer address not found on label")
-
-    # Relaxed: check if city+state tokens overlap significantly
-    e_tokens = set(_strip_all_punct(expected))
-    x_tokens = set(_strip_all_punct(extracted))
 
     e_words = set(_norm_text(expected).split())
     x_words = set(_norm_text(extracted).split())

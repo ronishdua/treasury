@@ -1,9 +1,9 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { createJob, uploadAllChunked, streamUrl } from '../utils/api';
-import { compressImages } from '../utils/compress';
+import { useState, useCallback, useRef, useEffect } from "react";
+import { createJob, uploadAllChunked, streamUrl } from "../utils/api";
+import { compressImages } from "../utils/compress";
 
 export function useAnalysis() {
-  const [status, setStatus] = useState('idle'); // idle | uploading | streaming | complete | error
+  const [status, setStatus] = useState("idle"); // idle | uploading | streaming | complete | error
   const [results, setResults] = useState(new Map());
   const [total, setTotal] = useState(0);
   const [error, setError] = useState(null);
@@ -22,11 +22,13 @@ export function useAnalysis() {
     if (
       total > 0 &&
       results.size >= total &&
-      (status === 'streaming' || status === 'uploading')
+      (status === "streaming" || status === "uploading")
     ) {
-      setStatus('complete');
+      setStatus("complete");
       if (startTimeRef.current) {
-        setElapsedSeconds(Math.round((performance.now() - startTimeRef.current) / 1000));
+        setElapsedSeconds(
+          Math.round((performance.now() - startTimeRef.current) / 1000),
+        );
       }
       if (donePayloadRef.current?.unmatched_csv_rows) {
         setUnmatchedCsvRows(donePayloadRef.current.unmatched_csv_rows);
@@ -44,7 +46,7 @@ export function useAnalysis() {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
-    setStatus('idle');
+    setStatus("idle");
     setResults(new Map());
     setTotal(0);
     setError(null);
@@ -55,79 +57,97 @@ export function useAnalysis() {
     donePayloadRef.current = null;
   }, []);
 
-  const analyze = useCallback(async (files, applicationData = null) => {
-    reset();
-    setTotal(files.length);
-    setStatus('uploading');
-    startTimeRef.current = performance.now();
+  const analyze = useCallback(
+    async (files, applicationData = null) => {
+      reset();
+      setTotal(files.length);
+      setStatus("uploading");
+      startTimeRef.current = performance.now();
 
-    try {
-      const compressed = await compressImages(Array.from(files));
-      const { job_id, duplicate_label_ids } = await createJob(compressed.length, applicationData);
+      try {
+        const compressed = await compressImages(Array.from(files));
+        const { job_id, duplicate_label_ids } = await createJob(
+          compressed.length,
+          applicationData,
+        );
 
-      if (duplicate_label_ids && duplicate_label_ids.length > 0) {
-        setDuplicateIds(duplicate_label_ids);
-      }
+        if (duplicate_label_ids && duplicate_label_ids.length > 0) {
+          setDuplicateIds(duplicate_label_ids);
+        }
 
-      const es = new EventSource(streamUrl(job_id));
-      eventSourceRef.current = es;
+        const es = new EventSource(streamUrl(job_id));
+        eventSourceRef.current = es;
 
-      es.addEventListener('meta', (e) => {
-        const data = JSON.parse(e.data);
-        setTotal(data.total_files);
-      });
-
-      es.addEventListener('result', (e) => {
-        const data = JSON.parse(e.data);
-        setResults((prev) => {
-          const next = new Map(prev);
-          next.set(data.client_index, data);
-          return next;
+        es.addEventListener("meta", (e) => {
+          const data = JSON.parse(e.data);
+          setTotal(data.total_files);
         });
-        setStatus((s) => (s === 'uploading' ? 'streaming' : s));
-      });
 
-      es.addEventListener('error', (e) => {
-        if (!e.data) return;
-        const data = JSON.parse(e.data);
-        if (data.client_index >= 0) {
+        es.addEventListener("result", (e) => {
+          const data = JSON.parse(e.data);
           setResults((prev) => {
             const next = new Map(prev);
-            next.set(data.client_index, { ...data, _error: true });
+            next.set(data.client_index, data);
             return next;
           });
-        }
-      });
+          setStatus((s) => (s === "uploading" ? "streaming" : s));
+        });
 
-      // Store done payload for the useEffect to pick up
-      es.addEventListener('done', (e) => {
-        if (e.data) {
-          try {
-            donePayloadRef.current = JSON.parse(e.data);
-          } catch { /* ignore */ }
-        }
-        es.close();
-        eventSourceRef.current = null;
-      });
+        es.addEventListener("error", (e) => {
+          if (!e.data) return;
+          const data = JSON.parse(e.data);
+          if (data.client_index >= 0) {
+            setResults((prev) => {
+              const next = new Map(prev);
+              next.set(data.client_index, { ...data, _error: true });
+              return next;
+            });
+          }
+        });
 
-      // Connection error: clean up only, don't set status
-      es.onerror = () => {
-        if (es.readyState === EventSource.CLOSED) {
+        // Store done payload for the useEffect to pick up
+        es.addEventListener("done", (e) => {
+          if (e.data) {
+            try {
+              donePayloadRef.current = JSON.parse(e.data);
+            } catch {
+              /* ignore */
+            }
+          }
+          es.close();
+          eventSourceRef.current = null;
+        });
+
+        // Connection error: clean up only, don't set status
+        es.onerror = () => {
+          if (es.readyState === EventSource.CLOSED) {
+            eventSourceRef.current = null;
+          }
+        };
+
+        await uploadAllChunked(job_id, compressed);
+      } catch (err) {
+        setError(err.message);
+        setStatus("error");
+        if (eventSourceRef.current) {
+          eventSourceRef.current.close();
           eventSourceRef.current = null;
         }
-      };
-
-      await uploadAllChunked(job_id, compressed);
-
-    } catch (err) {
-      setError(err.message);
-      setStatus('error');
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
       }
-    }
-  }, [reset]);
+    },
+    [reset],
+  );
 
-  return { status, results, progress, total, error, duplicateIds, unmatchedCsvRows, elapsedSeconds, analyze, reset };
+  return {
+    status,
+    results,
+    progress,
+    total,
+    error,
+    duplicateIds,
+    unmatchedCsvRows,
+    elapsedSeconds,
+    analyze,
+    reset,
+  };
 }

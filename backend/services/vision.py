@@ -27,9 +27,6 @@ MODEL_FALLBACK = os.environ.get("MODEL_FALLBACK_OVERRIDE", "claude-sonnet-4-5")
 MAX_RETRIES = 3
 MAX_TOKENS = 600
 
-# Critical fields that trigger Sonnet fallback if Haiku returns null/suspect
-CRITICAL_FIELDS = ["government_warning_present", "alcohol_by_volume", "net_contents"]
-
 # Tool definition for structured output
 EXTRACT_TOOL = {
     "name": "extract_label_data",

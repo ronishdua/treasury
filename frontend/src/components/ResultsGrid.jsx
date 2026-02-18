@@ -1,5 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import LabelCard from './LabelCard';
+
+function stem(name) {
+  return (name || '').replace(/\.[^.]+$/, '').toLowerCase();
+}
 
 function computeStats(results) {
   let passed = 0, rejected = 0, needsReview = 0, errors = 0, matched = 0;
@@ -46,12 +50,22 @@ function StatCard({ value, label, color, active, onClick }) {
   );
 }
 
-export default function ResultsGrid({ files, results, progress, total, isComplete, duplicateIds = [], unmatchedCsvRows = [], elapsedSeconds }) {
+export default function ResultsGrid({ files, previewUrls = [], results, progress, total, isComplete, duplicateIds = [], unmatchedCsvRows = [], elapsedSeconds }) {
   const stats = computeStats(results);
   const [filter, setFilter] = useState(null);
 
   const toggleFilter = (f) => setFilter((prev) => (prev === f ? null : f));
   const pct = total > 0 ? Math.round((progress / total) * 100) : 0;
+
+  // Map filename stem -> { file, previewUrl } so we can match result.filename to the correct image
+  const fileByStem = useMemo(() => {
+    const m = new Map();
+    files.forEach((f, i) => {
+      const s = stem(f?.name);
+      if (s) m.set(s, { file: f, previewUrl: previewUrls[i] });
+    });
+    return m;
+  }, [files, previewUrls]);
 
   return (
     <div className="w-full space-y-6">
@@ -123,15 +137,20 @@ export default function ResultsGrid({ files, results, progress, total, isComplet
         </div>
       )}
 
-      {/* ── Label cards ── */}
+      {/* ── Label cards: one per slot, match image to result by filename so order is correct ── */}
       <div className="space-y-6">
-        {files.map((file, idx) => {
-          if (filter && getResultStatus(results.get(idx)) !== filter) return null;
+        {Array.from({ length: total }, (_, idx) => {
+          const result = results.get(idx);
+          if (filter && getResultStatus(result) !== filter) return null;
+          const matched = result?.filename ? fileByStem.get(stem(result.filename)) : null;
+          const file = matched?.file ?? files[idx];
+          const previewUrl = matched?.previewUrl ?? previewUrls[idx];
           return (
             <LabelCard
               key={idx}
               file={file}
-              result={results.get(idx)}
+              previewUrl={previewUrl}
+              result={result}
               clientIndex={idx}
             />
           );

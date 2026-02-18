@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import UploadZone from "./components/UploadZone";
 import ResultsGrid from "./components/ResultsGrid";
 import { useAnalysis } from "./hooks/useAnalysis";
@@ -24,21 +24,34 @@ function GovBanner() {
 
 export default function App() {
   const [files, setFiles] = useState([]);
-  const [csvData, setCsvData] = useState(null);
+  const [previewUrls, setPreviewUrls] = useState([]);
+  const filesRef = useRef([]);
+  const previewUrlsRef = useRef([]);
   const { status, results, progress, total, error, duplicateIds, unmatchedCsvRows, elapsedSeconds, analyze, reset } =
     useAnalysis();
 
   const handleAnalyze = (selectedFiles, applicationData = null) => {
-    setFiles(selectedFiles);
-    setCsvData(applicationData);
+    const list = Array.from(selectedFiles);
+    const urls = list.map((f) => URL.createObjectURL(f));
+    filesRef.current = list;
+    previewUrlsRef.current = urls;
+    setFiles(list);
+    setPreviewUrls(urls);
     analyze(selectedFiles, applicationData);
   };
 
   const handleReset = () => {
+    previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    previewUrlsRef.current = [];
+    filesRef.current = [];
+    setPreviewUrls([]);
     setFiles([]);
-    setCsvData(null);
     reset();
   };
+
+  const filesForResults = files.length === total && total > 0 ? files : filesRef.current;
+  const urlsForResults =
+    previewUrls.length === total && total > 0 ? previewUrls : previewUrlsRef.current;
 
   const showUpload = status === "idle" || status === "error";
   const showResults =
@@ -89,7 +102,8 @@ export default function App() {
 
         {showResults && (
           <ResultsGrid
-            files={files}
+            files={filesForResults}
+            previewUrls={urlsForResults}
             results={results}
             progress={progress}
             total={total}

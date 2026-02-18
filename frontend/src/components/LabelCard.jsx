@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 
 // ---------------------------------------------------------------------------
 // Status
@@ -125,9 +125,14 @@ const FIELD_LABELS = {
 // Main card
 // ---------------------------------------------------------------------------
 
-export default function LabelCard({ file, result, clientIndex }) {
+export default function LabelCard({ file, previewUrl, result, clientIndex }) {
   const status = getOverallStatus(result);
-  const thumbUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  const createdUrl = useMemo(
+    () => (!previewUrl && file ? URL.createObjectURL(file) : null),
+    [previewUrl, file],
+  );
+  const thumbUrl = previewUrl ?? createdUrl;
+  useEffect(() => () => { if (createdUrl) URL.revokeObjectURL(createdUrl); }, [createdUrl]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
   const onImgError = useCallback(() => setImgError(true), []);
@@ -274,7 +279,7 @@ export default function LabelCard({ file, result, clientIndex }) {
           {regularFields.length > 0 && (
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b-2 border-navy-300">
+                <tr className="border-b-2 border-navy-600">
                   <th className="text-left pb-3 w-40 text-sm font-black text-navy-900 uppercase tracking-wider">Field</th>
                   <th className="text-left pb-3 text-sm font-black text-navy-900 uppercase tracking-wider">Expected</th>
                   <th className="text-left pb-3 text-sm font-black text-navy-900 uppercase tracking-wider">Extracted</th>
