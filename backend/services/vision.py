@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import logging
 import os
 import random
 import time
@@ -7,6 +8,8 @@ import time
 import anthropic
 
 from prompts.label_prompt import SYSTEM_PROMPT
+
+logger = logging.getLogger("label-checker")
 
 _client = None
 
@@ -182,9 +185,10 @@ async def _call_with_retries(image_bytes: bytes, filename: str, model: str) -> d
 
 async def _call_claude(image_bytes: bytes, filename: str, model: str) -> dict:
     """Single Claude API call with tool use for structured output."""
+    t0 = time.time()
     b64 = base64.standard_b64encode(image_bytes).decode("utf-8")
+    logger.info("[claude] %s model=%s payload=%.0fKB (base64=%.0fKB)", filename, model, len(image_bytes) / 1024, len(b64) / 1024)
 
-    # After preprocessing, all images are JPEG regardless of original format
     media_type = "image/jpeg"
 
     response = await _get_client().messages.create(
@@ -219,4 +223,10 @@ async def _call_claude(image_bytes: bytes, filename: str, model: str) -> dict:
             }
         ],
     )
-    return _extract_tool_input(response)
+    result = _extract_tool_input(response)
+    logger.info("[claude] %s DONE %.1fs (input_tokens=%d, output_tokens=%d, model=%s)",
+                filename, time.time() - t0,
+                getattr(response.usage, "input_tokens", 0),
+                getattr(response.usage, "output_tokens", 0),
+                model)
+    return result

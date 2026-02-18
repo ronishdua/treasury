@@ -55,7 +55,7 @@ export function streamUrl(jobId) {
   return `${API_BASE}/jobs/${jobId}/stream`;
 }
 
-const CHUNK_SIZE = 10;
+const CHUNK_SIZE = 3;
 const MAX_CONCURRENT = 4;
 
 export async function uploadAllChunked(jobId, files, onChunkDone) {

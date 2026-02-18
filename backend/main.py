@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import os
 import tempfile
 import time
@@ -10,6 +11,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger("label-checker")
 from fastapi import FastAPI, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -102,7 +106,9 @@ async def worker(worker_id: int):
                     job.files_processed += 1
                 continue
 
-            # Read temp file
+            t_start = time.time()
+            logger.info("[worker-%d] START %s (file_id=%d, client_index=%d)", worker_id, filename, file_id, client_index)
+
             with open(temp_path, "rb") as f:
                 raw_bytes = f.read()
 
@@ -110,29 +116,32 @@ async def worker(worker_id: int):
                 job.files_processed += 1
                 continue
 
-            # Preprocess image (safety validation, resize, compress)
+            t_preprocess = time.time()
+            raw_size = len(raw_bytes)
             processed_bytes = preprocess_image(raw_bytes)
             del raw_bytes
+            logger.info("[worker-%d] PREPROCESS %s %.2fs (%.0fKB -> %.0fKB)", worker_id, filename, time.time() - t_preprocess, raw_size / 1024, len(processed_bytes) / 1024)
 
             if job.cancelled:
                 job.files_processed += 1
                 continue
 
-            # Extract label data via Claude (gated by API_SEMAPHORE)
+            t_claude = time.time()
+            logger.info("[worker-%d] CLAUDE_START %s (waiting for semaphore, %d/%d slots used)", worker_id, filename, API_SEMAPHORE._value, 10)
             async with API_SEMAPHORE:
+                logger.info("[worker-%d] CLAUDE_CALL %s (acquired semaphore after %.1fs)", worker_id, filename, time.time() - t_claude)
+                t_api = time.time()
                 data = await extract_label_data(processed_bytes, filename)
             del processed_bytes
+            logger.info("[worker-%d] CLAUDE_DONE %s %.1fs (model=%s)", worker_id, filename, time.time() - t_api, data.get("_model_used", "unknown"))
 
-            # Match image to application data row (O(1) dict lookup)
             app_row = _match_application_row(job, filename)
             app_row_dict = app_row if isinstance(app_row, dict) else None
             if app_row_dict and app_row_dict.get("label_id"):
                 job.matched_label_ids.add(app_row_dict["label_id"])
 
-            # Run compliance checks (with optional application data comparison)
             compliance = check_compliance(data, application_row=app_row_dict)
 
-            # Build result payload
             result_payload: dict = {
                 "client_index": client_index,
                 "file_id": file_id,
@@ -144,16 +153,17 @@ async def worker(worker_id: int):
                 },
             }
 
-            # Attach comparison detail when available
             if "comparison" in compliance:
                 result_payload["comparison"] = compliance["comparison"]
 
             await job.result_queue.put(("result", result_payload))
             job.files_processed += 1
+            logger.info("[worker-%d] COMPLETE %s total=%.1fs (passed=%s, issues=%d)", worker_id, filename, time.time() - t_start, compliance["passed"], len(compliance["issues"]))
 
         except asyncio.CancelledError:
             raise
         except Exception as e:
+            logger.error("[worker-%d] ERROR %s: %s", worker_id, filename, e, exc_info=True)
             if job and not job.cancelled:
                 try:
                     await job.result_queue.put((
@@ -268,6 +278,7 @@ async def create_job(req: JobCreateRequest):
     job_id = uuid.uuid4().hex[:12]
     job = Job(job_id=job_id, total_files=req.total_files, app_index=app_index)
     jobs[job_id] = job
+    logger.info("[job] CREATED job=%s total_files=%d app_rows=%d", job_id, req.total_files, len(app_index))
     return JobCreated(job_id=job_id, duplicate_label_ids=duplicates)
 
 
@@ -302,6 +313,8 @@ async def upload_files(
         raise HTTPException(400, "Uploading more files than declared total_files")
 
     ack_files: list[FileInfo] = []
+    t_upload_start = time.time()
+    logger.info("[upload] job=%s receiving %d file(s) (received_so_far=%d/%d)", job_id[:12], len(files), job.files_received, job.total_files)
 
     for i, upload_file in enumerate(files):
         if upload_file.content_type and upload_file.content_type not in ALLOWED_TYPES:
@@ -352,6 +365,8 @@ async def upload_files(
         job.last_upload_at = time.time()
 
         ack_files.append(FileInfo(file_id=file_id, client_index=client_index, filename=filename))
+
+    logger.info("[upload] job=%s saved %d files in %.1fs (total received=%d/%d, total_bytes=%dKB)", job_id[:12], len(files), time.time() - t_upload_start, job.files_received, job.total_files, job.total_bytes // 1024)
 
     if job.files_received >= job.total_files:
         job.uploads_complete = True
