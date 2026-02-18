@@ -323,7 +323,7 @@ export default function UploadZone({ onAnalyze, disabled }) {
               1
             </span>
             <h3 className='text-xl font-bold text-navy-900'>
-              Add Application Data
+              Step 1
             </h3>
           </div>
 
@@ -357,18 +357,18 @@ export default function UploadZone({ onAnalyze, disabled }) {
               </div>
               <button
                 type='button'
-                onClick={() => csvInputRef.current?.click()}
-                className='w-full bg-navy-900 hover:bg-navy-800 text-white font-semibold py-3.5 rounded-lg transition-colors text-base'
+                onClick={loadSampleCsv}
+                disabled={loadingSampleCsv}
+                className='w-full py-2.5 rounded-lg text-sm font-semibold text-navy-700 hover:text-navy-900 hover:bg-cream-100 transition-colors border border-cream-200'
               >
-                Browse Files
+                {loadingSampleCsv ? 'Loading...' : 'Use Sample CSV (10 rows)'}
               </button>
               <button
                 type='button'
-                onClick={loadSampleCsv}
-                disabled={loadingSampleCsv}
-                className='w-full mt-3 py-2.5 rounded-lg text-sm font-semibold text-navy-700 hover:text-navy-900 hover:bg-cream-100 transition-colors border border-cream-200'
+                onClick={() => csvInputRef.current?.click()}
+                className='w-full mt-3 bg-navy-900 hover:bg-navy-800 text-white font-semibold py-3.5 rounded-lg transition-colors text-base'
               >
-                {loadingSampleCsv ? 'Loading...' : 'Use Sample CSV (10 rows)'}
+                Browse Files
               </button>
               {csvError && (
                 <div className='mt-3 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700'>
@@ -458,7 +458,7 @@ export default function UploadZone({ onAnalyze, disabled }) {
               2
             </span>
             <h3 className='text-xl font-bold text-navy-900'>
-              Add Label Images
+              Step 2
             </h3>
             {hasFiles ? (
               <button
@@ -497,18 +497,18 @@ export default function UploadZone({ onAnalyze, disabled }) {
               </div>
               <button
                 type='button'
-                onClick={() => imageInputRef.current?.click()}
-                className='w-full bg-navy-900 hover:bg-navy-800 text-white font-semibold py-3.5 rounded-lg transition-colors text-base'
+                onClick={loadSampleImages}
+                disabled={loadingSampleImages}
+                className='w-full py-2.5 rounded-lg text-sm font-semibold text-navy-700 hover:text-navy-900 hover:bg-cream-100 transition-colors border border-cream-200'
               >
-                Browse Files
+                {loadingSampleImages ? 'Loading...' : 'Use Sample Images (10 labels)'}
               </button>
               <button
                 type='button'
-                onClick={loadSampleImages}
-                disabled={loadingSampleImages}
-                className='w-full mt-3 py-2.5 rounded-lg text-sm font-semibold text-navy-700 hover:text-navy-900 hover:bg-cream-100 transition-colors border border-cream-200'
+                onClick={() => imageInputRef.current?.click()}
+                className='w-full mt-3 bg-navy-900 hover:bg-navy-800 text-white font-semibold py-3.5 rounded-lg transition-colors text-base'
               >
-                {loadingSampleImages ? 'Loading...' : 'Use Sample Images (10 labels)'}
+                Browse Files
               </button>
             </>
           ) : (
