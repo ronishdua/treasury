@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://backend-bitter-fog-6071.fly.dev/api/:path*"
+      "source": "/((?!api).*)",
+      "destination": "/index.html"
     }
   ]
 }
