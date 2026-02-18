@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { createJob, uploadAllChunked, streamUrl } from '../utils/api';
+import { compressImages } from '../utils/compress';
 
 export function useAnalysis() {
   const [status, setStatus] = useState('idle'); // idle | uploading | streaming | complete | error
@@ -61,7 +62,8 @@ export function useAnalysis() {
     startTimeRef.current = performance.now();
 
     try {
-      const { job_id, duplicate_label_ids } = await createJob(files.length, applicationData);
+      const compressed = await compressImages(Array.from(files));
+      const { job_id, duplicate_label_ids } = await createJob(compressed.length, applicationData);
 
       if (duplicate_label_ids && duplicate_label_ids.length > 0) {
         setDuplicateIds(duplicate_label_ids);
@@ -115,7 +117,7 @@ export function useAnalysis() {
         }
       };
 
-      await uploadAllChunked(job_id, files);
+      await uploadAllChunked(job_id, compressed);
 
     } catch (err) {
       setError(err.message);
