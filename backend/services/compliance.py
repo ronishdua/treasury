@@ -22,8 +22,7 @@ MAIN_FIELDS = [
     "producer_address",
 ]
 
-# Comparison fields that should be treated as critical when mismatched
-_CRITICAL_COMPARISON_FIELDS = {"brand_name", "alcohol_content", "net_contents"}
+# Any comparison mismatch or partial match = reject (all fields treated as critical)
 
 
 def _normalize(text: str) -> str:
@@ -97,23 +96,30 @@ def check_compliance(data: dict, application_row: dict | None = None) -> dict:
             "issue_type": "presence",
         })
 
-    # Government warning text match
+    # Government warning text match (any mismatch = reject)
     warning_text = data.get("government_warning_text")
     if data.get("government_warning_present") and warning_text:
         if _normalize(warning_text) == _normalize(CANONICAL_WARNING):
             pass  # Exact match
         else:
-            issues.append({
-                "field": "government_warning_text",
-                "severity": "needs_review",
-                "message": "Warning text does not exactly match the required federal text -- verify manually",
-                "issue_type": "presence",
-            })
+            # Check body-only match (header may be omitted by model)
+            header_re = re.compile(r"^\s*GOVERNMENT\s+WARNING\s*:\s*", re.IGNORECASE)
+            canon_body = header_re.sub("", CANONICAL_WARNING).strip()
+            ext_body = header_re.sub("", warning_text).strip()
+            if re.sub(r"\s+", " ", canon_body.upper()) == re.sub(r"\s+", " ", ext_body.upper()):
+                pass  # Body matches
+            else:
+                issues.append({
+                    "field": "government_warning_text",
+                    "severity": _severity("critical"),
+                    "message": "Warning text does not match the required federal text",
+                    "issue_type": "presence",
+                })
     elif data.get("government_warning_present") and not warning_text:
         issues.append({
             "field": "government_warning_text",
-            "severity": "needs_review",
-            "message": "Warning detected but text could not be extracted -- verify manually",
+            "severity": _severity("critical"),
+            "message": "Warning detected but text could not be extracted",
             "issue_type": "presence",
         })
 
@@ -239,18 +245,16 @@ def check_compliance(data: dict, application_row: dict | None = None) -> dict:
             field_name = field_result["field"]
 
             if status == "mismatch":
-                severity = "critical" if field_name in _CRITICAL_COMPARISON_FIELDS else "needs_review"
                 issues.append({
                     "field": field_name,
-                    "severity": _severity(severity),
+                    "severity": _severity("critical"),
                     "message": field_result.get("message", f"{field_name} does not match application data"),
                     "issue_type": "comparison",
                 })
             elif status == "not_found":
-                severity = "critical" if field_name in _CRITICAL_COMPARISON_FIELDS else "needs_review"
                 issues.append({
                     "field": field_name,
-                    "severity": _severity(severity),
+                    "severity": _severity("critical"),
                     "message": field_result.get("message", f"{field_name} not found on label"),
                     "issue_type": "comparison",
                 })

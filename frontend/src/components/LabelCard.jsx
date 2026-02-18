@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 // ---------------------------------------------------------------------------
 // Status
@@ -196,9 +197,12 @@ export default function LabelCard({ file, previewUrl, result, clientIndex }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
       {/* Lightbox */}
-      {lightboxOpen && thumbUrl && (
-        <Lightbox src={thumbUrl} alt={file?.name} onClose={() => setLightboxOpen(false)} />
-      )}
+      {lightboxOpen &&
+        thumbUrl &&
+        createPortal(
+          <Lightbox src={thumbUrl} alt={file?.name} onClose={() => setLightboxOpen(false)} />,
+          document.body,
+        )}
 
       {/* ── Header ── */}
       <div className={`${status.bg} px-8 py-4 flex items-center justify-between border-b border-gray-200`}>

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Papa from "papaparse";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -46,9 +47,11 @@ function FilePreview({ file, onRemove }) {
   const [lightbox, setLightbox] = useState(false);
   return (
     <div className='group'>
-      {lightbox && (
-        <PreviewLightbox src={url} alt={file.name} onClose={() => setLightbox(false)} />
-      )}
+      {lightbox &&
+        createPortal(
+          <PreviewLightbox src={url} alt={file.name} onClose={() => setLightbox(false)} />,
+          document.body,
+        )}
       <div className='relative w-32 h-32'>
         <img
           src={url}

@@ -15,15 +15,15 @@ AI-powered alcohol beverage label verification for TTB compliance agents. Upload
 
 Upload a CSV with the following columns:
 
-| Column | Example |
-|--------|---------|
-| `label_id` | COLA-0001 |
-| `brand_name` | Old Tom Distillery |
-| `class_type` | Kentucky Straight Bourbon Whiskey |
-| `alcohol_content` | 45% Alc./Vol. |
-| `net_contents` | 750 mL |
-| `producer_name` | Old Tom Distillery |
-| `producer_address` | Louisville, KY |
+| Column             | Example                           |
+| ------------------ | --------------------------------- |
+| `label_id`         | COLA-0001                         |
+| `brand_name`       | Old Tom Distillery                |
+| `class_type`       | Kentucky Straight Bourbon Whiskey |
+| `alcohol_content`  | 45% Alc./Vol.                     |
+| `net_contents`     | 750 mL                            |
+| `producer_name`    | Old Tom Distillery                |
+| `producer_address` | Louisville, KY                    |
 
 ## Image Naming
 

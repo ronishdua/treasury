@@ -213,6 +213,12 @@ def _compare_producer_name(expected: str, extracted: str | None) -> dict:
                     "Producer name does not match application data")
 
 
+# Strip optional "GOVERNMENT WARNING:" header so we can compare body-only (model often omits header)
+_GOV_WARNING_HEADER_RE = re.compile(
+    r"^\s*GOVERNMENT\s+WARNING\s*:\s*", re.IGNORECASE
+)
+
+
 def _compare_government_warning(extracted_data: dict) -> dict:
     """Compare extracted government warning text against the canonical required text."""
     present = extracted_data.get("government_warning_present", False)
@@ -227,18 +233,25 @@ def _compare_government_warning(extracted_data: dict) -> dict:
             else "Warning detected but text could not be extracted",
         )
 
+    # Full string match (with optional header stripped for comparison)
     canon_norm = re.sub(r"\s+", " ", CANONICAL_WARNING.strip().upper())
     ext_norm = re.sub(r"\s+", " ", extracted_text.strip().upper())
-
     if canon_norm == ext_norm:
         return _result("government_warning", CANONICAL_WARNING, extracted_text, "match")
 
-    # Check word-level similarity for partial match
+    # Body-only match: if model omitted "GOVERNMENT WARNING:" but rest is correct, count as match
+    canon_body = _GOV_WARNING_HEADER_RE.sub("", CANONICAL_WARNING).strip()
+    ext_body = _GOV_WARNING_HEADER_RE.sub("", extracted_text).strip()
+    canon_body_norm = re.sub(r"\s+", " ", canon_body.upper())
+    ext_body_norm = re.sub(r"\s+", " ", ext_body.upper())
+    if canon_body_norm and canon_body_norm == ext_body_norm:
+        return _result("government_warning", CANONICAL_WARNING, extracted_text, "match")
+
+    # Word-level similarity for partial
     canon_words = set(re.findall(r"[a-z0-9]+", CANONICAL_WARNING.lower()))
     ext_words = set(re.findall(r"[a-z0-9]+", extracted_text.lower()))
     overlap = len(canon_words & ext_words)
     total = max(len(canon_words), 1)
-
     if overlap / total >= 0.80:
         return _result(
             "government_warning", CANONICAL_WARNING, extracted_text, "partial",

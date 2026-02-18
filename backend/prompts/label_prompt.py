@@ -10,8 +10,8 @@ Key requirements:
 
 GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.
 
+- For government_warning_text: extract the FULL warning text exactly as it appears on the label. You MUST include the heading "GOVERNMENT WARNING:" at the very beginning when it is visible on the label (do not omit it). If the label shows "GOVERNMENT WARNING:" followed by the two numbered points, your extracted text must start with "GOVERNMENT WARNING:" and then the rest.
 - Note whether "GOVERNMENT WARNING:" appears in ALL CAPS and whether it appears to be bold/heavier weight than surrounding text.
-- Extract the raw text of the warning exactly as it appears on the label for verification.
 - For alcohol content, capture the full expression (e.g. "12.5% Alc./Vol." or "45% Alc./Vol. (90 Proof)").
 - For net contents, capture the full expression (e.g. "750 mL" or "12 FL. OZ.").
 - For producer/bottler information: extract the name and address as SEPARATE fields.

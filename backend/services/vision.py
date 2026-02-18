@@ -60,7 +60,7 @@ EXTRACT_TOOL = {
             },
             "government_warning_text": {
                 "type": ["string", "null"],
-                "description": "The exact text of the government warning as it appears on the label",
+                "description": "The exact text of the government warning as it appears on the label. MUST include the heading 'GOVERNMENT WARNING:' at the start when that heading is visible on the label.",
             },
             "government_warning_header_all_caps": {
                 "type": ["boolean", "null"],
